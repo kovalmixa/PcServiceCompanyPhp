@@ -1,0 +1,56 @@
+/* table.css – black & white edition */
+
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: 12px;
+}
+
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    color: #111;
+    overflow: hidden;
+}
+
+.glass-table th {
+    background: rgba(0, 0, 0, 0.07);
+    padding: 15px;
+    text-align: left;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.glass-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    vertical-align: middle;
+}
+
+.glass-table tr:hover {
+    background: rgba(0, 0, 0, 0.04);
+    transition: background 0.3s ease;
+}
+
+.glass-table tr:last-child td {
+    border-bottom: none;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.glass-table {
+    text-shadow: none;
+}

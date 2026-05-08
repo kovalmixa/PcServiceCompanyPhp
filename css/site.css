@@ -1,0 +1,325 @@
+/* site.css – black & white edition */
+
+html {
+    font-size: 15px;
+    scroll-behavior: smooth;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.logo {
+    text-shadow: none;
+    color: #000;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+body {
+    margin-bottom: 60px;
+    background: #f0f0f0;
+    color: #111;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: #f0f0f0;
+}
+
+h2 {
+    font-weight: bold;
+}
+
+.row-label {
+    flex: 0 0 150px;
+    display: flex;
+}
+
+/* ── Glass containers – monochrome ─────────────────────────── */
+.glass-container {
+    padding: 1%;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    margin: 10px 20px;
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+}
+
+.glass-container.no-sticky {
+    position: relative;
+    top: 0;
+    margin-top: 20px;
+}
+
+/* ── Layout helpers ─────────────────────────────────────────── */
+.header-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.col-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.col-container > .row-container {
+    margin: 0;
+    gap: 10px;
+}
+
+.center-container {
+    text-align: center;
+}
+
+.center-container,
+.row-container {
+    max-width: 1200px;
+    margin: 1rem auto;
+    gap: 15px;
+}
+
+.row-container {
+    display: flex;
+    align-items: center;
+}
+
+/* ── Links ──────────────────────────────────────────────────── */
+a {
+    color: #111;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #444;
+}
+
+/* ── Form elements & buttons ────────────────────────────────── */
+input,
+.a-btn,
+.red-btn,
+button {
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 10px;
+    padding: 0.65rem 1.2rem;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.red-btn,
+.a-btn,
+button {
+    margin-top: 10px;
+    color: #fff;
+    border: none;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    position: relative;
+    z-index: 5;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+/* Primary button – solid black */
+.a-btn {
+    background: #111;
+    color: #fff;
+}
+
+.red-btn.auto-width,
+.a-btn.auto-width,
+button.auto-width {
+    width: auto;
+    min-width: 120px;
+    display: inline-flex;
+}
+
+.a-btn:hover,
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    background: #333;
+}
+
+.a-btn:active,
+button:active {
+    transform: scale(0.98);
+    box-shadow: none;
+}
+
+.red-btn.disabled,
+.a-btn.disabled,
+button.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+label, h2 {
+    padding-left: 0;
+}
+
+/* Money label – dark instead of green */
+.money {
+    color: #111;
+    font-weight: bold;
+}
+
+img {
+    width: 250px;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+h2, strong, label, textarea,
+input, .a-btn, button {
+    text-shadow: none;
+    color: #111;
+    font-weight: 600;
+    gap: 15px;
+}
+
+.a-btn,
+button {
+    color: #fff; /* white text on dark button */
+}
+
+textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.03);
+    max-width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    padding: 10px;
+    color: #111;
+}
+
+input {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1.5px solid #bbb;
+    color: #111;
+    transition: all 0.25s ease;
+}
+
+input:hover {
+    border-color: #888;
+}
+
+input:focus {
+    border-color: #111;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+input[type="range"] {
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 25%;
+    background: #111;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+input[type=range]:active::-webkit-slider-thumb {
+    background: #000;
+    transform: scale(1.2);
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+}
+
+input[type="file"]::file-selector-button {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Destructive / cancel button – light with dark border */
+.red-btn {
+    background: rgba(0, 0, 0, 0.06);
+    color: #111;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    text-shadow: none;
+    font-weight: 600;
+}
+
+.red-btn:hover {
+    background: rgba(0, 0, 0, 0.14);
+    color: #000;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* ── Focus rings ────────────────────────────────────────────── */
+.btn:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Validation ─────────────────────────────────────────────── */
+input.input-validation-error {
+    border-color: #444 !important;
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+input.input-validation-error:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.15) !important;
+    outline: none;
+}
+
+.field-validation-error {
+    color: #333 !important;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: block;
+    font-weight: 500;
+}
+
+/* ── Misc ───────────────────────────────────────────────────── */
+select:disabled {
+    background-color: #e8e8e8;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
