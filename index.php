@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES) ?>">
-    <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="css/site.css">
     <title>PC Store</title>
 </head>
 <body>
@@ -23,29 +23,6 @@
             </div>
         </div>
     </footer>
-
-    <script src="/js/site.js"></script>
-    <script type="module">
-        import { sendActionRequest } from '/js/data-base.js';
-
-        async function downloadReport() {
-            const response = await sendActionRequest('/staff/reports/download-logs-report', 'GET');
-            if (response) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'log_report_' + new Date().getTime() + '.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-            }
-        }
-
-        window.downloadReport = downloadReport;
-    </script>
-
     <?= $pageScripts ?? '' ?>
 </body>
 </html>

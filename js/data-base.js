@@ -1,22 +1,7 @@
-/**
- * data-base.js
- * Core HTTP helpers – PHP backend edition.
- *
- * PHP CSRF setup (add to _layout.php <head>):
- *   <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?>">
- *
- * Or use the hidden input already rendered by index.php:
- *   <input type="hidden" name="csrf_token" value="...">
- *
- * Both are checked below (meta tag takes priority).
- */
-
 function getCsrfToken() {
-    // 1. Prefer <meta name="csrf-token"> (cleaner, layout-level)
     const meta = document.querySelector('meta[name="csrf-token"]');
     if (meta) return meta.getAttribute('content');
 
-    // 2. Fall back to hidden input rendered by the view
     const input = document.querySelector('input[name="csrf_token"]');
     if (input) return input.value;
 
@@ -58,13 +43,6 @@ export async function sendActionRequest(url, method, data = null) {
     }
 }
 
-/**
- * Place an order (customer cart or staff component order).
- *
- * PHP endpoints (placeholders – implement in your router):
- *   POST /client/orders/add-to-cart/{id}?quantity={q}
- *   POST /staff/component-order/order/{id}?quantity={q}
- */
 export async function handleOrder(id, quantity, companyId, isComponent, role = 'Customer') {
     const isCustomer = (role === 'Customer');
     const url = isCustomer
