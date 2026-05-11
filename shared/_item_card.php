@@ -1,14 +1,4 @@
 <?php
-/**
- * _item_card.php
- * Equivalent of Views/Shared/_ItemCard.cshtml
- *
- * Expected: $itemCard (array):
- *   'id', 'name', 'type', 'brand', 'price' (float), 'image_path' (string|null)
- *
- * Optional: $isEdit (bool) – when true the image is not wrapped in a link.
- */
-
 require_once __DIR__ . '/_helpers.php';
 
 $isEdit = $isEdit ?? false;

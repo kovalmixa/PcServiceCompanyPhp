@@ -1,15 +1,4 @@
 <?php
-/**
- * _component_card.php
- * Equivalent of Views/Shared/_ComponentCard.cshtml
- *
- * Expected: $itemCard (array):
- *   'id', 'name', 'brand', 'type', 'price' (float),
- *   'quantity' (int), 'company_id' (int), 'image_path' (string|null)
- *
- * Optional: $isEdit (bool)
- */
-
 require_once __DIR__ . '/_helpers.php';
 
 $isEdit    = $isEdit ?? false;
@@ -71,12 +60,10 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
                     <?php endif; ?>
                 </div>
 
-                <!-- Price label -->
                 <h2 id="price-label-<?= $id ?>" class="money" style="margin:0;">
                     <?= money($price) ?>
                 </h2>
 
-                <!-- Buy/order controls (only outside edit mode) -->
                 <?php if (!$isEdit): ?>
                     <?php if (isInRole('Customer') && $quantity <= 0): ?>
                         <button disabled class="a-btn"

@@ -1,28 +1,14 @@
 <?php
-/**
- * _header_panel.php
- * Equivalent of Views/Shared/_HeaderPanel.cshtml
- *
- * Reads from $_SESSION:
- *   'role'       – 'Admin' | 'Staff' | 'Customer'
- *   'user_id'    – int
- *   'company_id' – int  (for Staff/Admin)
- *   'balance'    – float (pre-fetched by the controller and stored in session or passed as $balance)
- *
- * $balance and $balanceLabel should be set by the controller before rendering.
- */
-
 require_once __DIR__ . '/_helpers.php';
 
 $pageSize       = isInRole('Admin') ? 29 : 30;
 $balanceLabel   = isInRole('Customer') ? 'Personal Balance' : 'Company Balance';
-$balance        = $balance ?? 0.00;   // set by controller
+$balance        = $balance ?? 0.00;
 ?>
 
 <div class="glass-container">
     <div class="header-panel">
 
-        <!-- Logo + balance -->
         <div class="logo" style="display: flex; align-items: center; gap: 20px;">
             <a href="/pc-configurations?pageSize=<?= $pageSize ?>">PC Store</a>
 
@@ -38,7 +24,6 @@ $balance        = $balance ?? 0.00;   // set by controller
             <?php endif; ?>
         </div>
 
-        <!-- Nav -->
         <nav class="row-container" style="justify-content: flex-end; margin-right: 0;">
             <?php if (isAuthenticated()): ?>
 

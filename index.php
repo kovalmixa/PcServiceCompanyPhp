@@ -1,10 +1,14 @@
+<?php
+require_once __DIR__ . '/shared/_helpers.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES) ?>">
-    <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>css/site.css">
     <title>PC Store</title>
 </head>
 <body>

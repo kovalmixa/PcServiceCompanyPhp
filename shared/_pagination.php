@@ -1,13 +1,4 @@
 <?php
-/**
- * Pagination partial – _pagination.php
- * Equivalent of Views/Shared/_Pagination.cshtml (partial used in Index)
- *
- * Expected variables (set by controller/router):
- *   $currentPage  (int)  – current page number, 1-based
- *   $totalPages   (int)  – total number of pages
- *   $baseUrl      (string) – URL prefix for page links, e.g. '/staff/component-order?page='
- */
 
 $currentPage = (int)($currentPage ?? 1);
 $totalPages  = (int)($totalPages  ?? 1);
