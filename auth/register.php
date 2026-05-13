@@ -19,7 +19,7 @@ ob_start();
 <div class="glass-container">
     <div class="container">
         <h3>Registration</h3>
-        <form action="<?= BASE_URL ?>/php_scripts/auth/auth.php?action=register" method="post">
+        <form action="<?= BASE_URL ?>/shared/_auth.php?action=register" method="post">
             <?= csrfField() ?>
 
             <?php foreach ($fields as $field): ?>

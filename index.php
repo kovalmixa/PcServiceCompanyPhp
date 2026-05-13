@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/shared/_helpers.php';
+    require_once __DIR__ . '/shared/_auth.php';
 ?>
 
 <!DOCTYPE html>

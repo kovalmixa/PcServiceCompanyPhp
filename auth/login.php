@@ -8,6 +8,7 @@ $old       = $old    ?? [];
 ob_start();
 ?>
 <form action="<?= BASE_URL ?>shared/_auth.php?action=login" method="post">
+    <?= csrfField() ?>
     <div class="glass-container">
         <div class="col_container">
             <?php if (!empty($errors['_general'])): ?>

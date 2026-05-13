@@ -1,14 +1,20 @@
 <?php
-require_once __DIR__ . '/_auth.php';
-
 define('BASE_URL', 'http://localhost/website/');
+
+enum UserRole: int 
+{
+    case Admin = 1;
+    case Staff = 2;
+    case User = 3;
+}
 
 function isAuthenticated(): bool {
     return !empty($_SESSION['user_id']);
 }
 
 function isInRole(UserRole $role): bool {
-    return (($_SESSION['role'] ?? '') === $role);
+    $sessionRole = $_SESSION['user_role'] ?? '';
+    return $sessionRole === $role->value;
 }
 
 function money(float $amount): string {
