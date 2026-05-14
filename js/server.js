@@ -10,15 +10,13 @@ function getCsrfToken() {
 }
 
 export async function sendActionRequest(url, method, data = null) {
-    const token = getCsrfToken();
-
-    if (!token) return null;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     const options = {
         method: method,
         headers: {
-            'X-CSRF-Token': token,
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': token
         }
     };
 
@@ -29,12 +27,13 @@ export async function sendActionRequest(url, method, data = null) {
 
     try {
         const response = await fetch(url, options);
-        if (response.ok) {
-            return response;
+        const result = await response.json();
+        if (response.ok && result.success) {
+            return result;
         } else {
-            const errorText = await response.text();
-            console.error(`Error ${response.status}: ${errorText}`);
-            alert(`Error: ${response.status}`);
+            const errorMsg = result.error || `Server error: ${response.status}`;
+            console.error(errorMsg);
+            alert(errorMsg);
             return null;
         }
     } catch (error) {

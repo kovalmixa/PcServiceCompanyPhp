@@ -20,12 +20,10 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
          style="display:flex;align-items:center;gap:20px;flex:1;margin:0;padding:10px 20px;">
         <div style="display:flex;gap:20px;color:rgba(0,0,0,0.85);font-size:0.95rem;align-items:center;">
             <div class="center-container">
-
-                <!-- Name row + optional admin delete button -->
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <h2 style="margin:0;font-size:1.25rem;text-align:center;flex:1;"><?= e($name) ?></h2>
 
-                    <?php if (isInRole('Admin') && !$isEdit): ?>
+                    <?php if (isInRole(UserRole::Admin) && !$isEdit): ?>
                         <button type="button" class="red-btn"
                                 onclick="if(confirm('Are you sure?'))
                                     sendActionRequest('/component/<?= $id ?>/delete','POST')"
@@ -34,8 +32,6 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
                         </button>
                     <?php endif; ?>
                 </div>
-
-                <!-- Thumbnail -->
                 <div style="flex:0 0 220px;display:flex;align-items:center;justify-content:center;
                             margin:10px 0;background:rgba(0,0,0,0.06);border-radius:12px;overflow:hidden;">
                     <?php if (!$isEdit): ?>
@@ -48,8 +44,6 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
                              style="width:220px;height:220px;object-fit:contain;">
                     <?php endif; ?>
                 </div>
-
-                <!-- Meta row -->
                 <div class="row-container">
                     <strong><strong>Brand:</strong> <?= e($brand) ?></strong>
                     <strong><strong>Type:</strong> <?= e($type) ?></strong>
@@ -65,7 +59,7 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
                 </h2>
 
                 <?php if (!$isEdit): ?>
-                    <?php if (isInRole('Customer') && $quantity <= 0): ?>
+                    <?php if (isCustomer() && $quantity <= 0): ?>
                         <button disabled class="a-btn"
                                 style="width:100%;opacity:0.5;cursor:not-allowed;">
                             Out of Stock
@@ -93,7 +87,6 @@ $role      = isCustomer() ? 'Customer' : 'Staff';
                         <?php endif; ?>
                     <?php endif; ?>
                 <?php endif; ?>
-
             </div>
         </div>
     </div>

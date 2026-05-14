@@ -1,285 +1,272 @@
 <?php
-/**
- * PcConfiguration/edit.php
- * Equivalent of Views/PcConfiguration/Edit.cshtml (PcConfigurationEdit.cshtml)
- *
- * Expected: $config (array):
- *   'id' (int), 'name', 'type' (string), 'warranty_months' (int),
- *   'price_multiplier' (float), 'price' (float), 'description',
- *   'image_path' (string|null),
- *   'component_bundles' => [ ItemCard arrays with 'id','name','price','quantity',... ],
- *   'item_cards'        => [ ItemCard arrays (the browseable component pool) ]
- *
- * Optional: $errors (array), $pcTypes (array of strings)
- */
+require_once __DIR__ . '/../shared/_helpers.php';
 
-require_once __DIR__ . '/../Shared/_helpers.php';
+$config    = $config    ?? [];
+$errors    = $errors    ?? [];
+$isEdit    = !empty($config['id']) && (int)$config['id'] > 0;
+$id        = (int)  ($config['id']         ?? 0);
+$name      =         $config['name']        ?? '';
+$imagePath =         $config['image_path']  ?? '';
+$img       = imgSrc($imagePath ?: null);
 
-$config     ??= [];
-$errors     ??= [];
-$pcTypes    ??= ['Desktop', 'Laptop', 'Workstation', 'Server', 'Mini'];
+$bundles = $config['component_bundles'] ?? [];
 
-$isEdit     = !empty($config['id']) && (int)$config['id'] > 0;
-$id         = (int)  ($config['id']               ?? 0);
-$name       =         $config['name']              ?? '';
-$type       =         $config['type']              ?? ($pcTypes[0] ?? '');
-$warranty   = (int)  ($config['warranty_months']  ?? 0);
-$multiplier = (float)($config['price_multiplier'] ?? 1.0);
-$price      = (float)($config['price']            ?? 0);
-$desc       =         $config['description']       ?? '';
-$imagePath  =         $config['image_path']        ?? '';
-$img        = imgSrc($imagePath ?: null);
-$bundles    =         $config['component_bundles'] ?? [];
-$itemCards  =         $config['item_cards']        ?? [];
-
-$action     = $isEdit ? '/pc-configuration/update' : '/pc-configuration/create';
-$pageTitle  = $isEdit ? 'Edit PC Configuration' : 'Add New PC Configuration';
-$isEdit_card = true; // tell _component_card.php it's in edit mode
+$pageTitle = $isEdit ? 'Edit PC Configuration' : 'New PC Configuration';
 
 ob_start();
 ?>
+<link rel="stylesheet" href="<?= BASE_URL ?>css/grid.css">
 
 <div class="glass-container no-sticky"
-     style="width:1300px;margin:0 auto;padding:30px;border-radius:20px;
-            display:flex;flex-direction:column;gap:25px;">
+     style="max-width:860px;margin:40px auto;padding:36px;border-radius:20px;
+            display:flex;flex-direction:column;gap:28px;">
 
-    <h2><?= $isEdit ? 'Edit PC Configuration' : 'Add New PC Configuration' ?></h2>
+    <h2 style="margin:0;"><?= $isEdit ? 'Edit PC Configuration' : 'New PC Configuration' ?></h2>
 
-    <form action="<?= e($action) ?>" method="post" enctype="multipart/form-data">
-        <?= csrfField() ?>
+    <?php if (!empty($errors['_general'])): ?>
+        <div class="field-validation-error"><?= e($errors['_general']) ?></div>
+    <?php endif; ?>
 
-        <!-- JSON payload built by prepareData() before submit -->
-        <input type="hidden" name="components_json" id="components-json">
-
-        <?php if (!empty($errors['_general'])): ?>
-            <div class="field-validation-error"><?= e($errors['_general']) ?></div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+        <label for="cfg-name" style="font-weight:600;">Configuration Name</label>
+        <input id="cfg-name" name="name" value="<?= e($name) ?>"
+               placeholder="e.g. Gaming Beast Pro"
+               style="max-width:480px;">
+        <?php if (!empty($errors['name'])): ?>
+            <span class="field-validation-error"><?= e($errors['name']) ?></span>
         <?php endif; ?>
+    </div>
 
-        <input type="hidden" name="id" value="<?= $id ?>">
-        <input type="hidden" name="image_path" value="<?= e($imagePath) ?>">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-weight:600;">Cover Image</label>
+        <div style="display:flex;align-items:flex-start;gap:20px;">
+            <img id="cfg-thumbnail"
+                 src="<?= e($img) ?>"
+                 alt="preview"
+                 style="width:140px;height:100px;object-fit:cover;border-radius:10px;
+                        border:1px solid rgba(0,0,0,0.12);background:rgba(0,0,0,0.04);">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <input id="file-input" type="file" accept="image/*"
+                       onchange="previewImageFromFile(this, 'cfg-thumbnail')">
+                <span style="font-size:0.8rem;opacity:0.5;">PNG, JPG, WEBP — max 4 MB</span>
+            </div>
+        </div>
+    </div>
 
-        <div class="row-container" style="align-items:stretch;margin-top:0;">
+    <div style="display:flex;gap:32px;padding:16px 20px;background:rgba(0,0,0,0.04);
+                border-radius:12px;border:1px solid rgba(0,0,0,0.08);">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:0.72rem;text-transform:uppercase;opacity:0.5;font-weight:600;">
+                Total Price
+            </span>
+            <span id="summary-price" class="money" style="font-size:1.7rem;font-weight:800;">
+                $0.00
+            </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:0.72rem;text-transform:uppercase;opacity:0.5;font-weight:600;">
+                Avg Quality
+            </span>
+            <span id="summary-quality" style="font-size:1.7rem;font-weight:800;">
+                —
+            </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:0.72rem;text-transform:uppercase;opacity:0.5;font-weight:600;">
+                Components
+            </span>
+            <span id="summary-count" style="font-size:1.7rem;font-weight:800;">0</span>
+        </div>
+    </div>
 
-            <!-- ── Left column: main fields ──────────────────── -->
-            <div class="center-container" style="flex:1;margin-top:0;">
-
-                <div class="row-container mb-3">
-                    <label class="row-label" for="cfg-name">Name</label>
-                    <div style="flex:1;">
-                        <input id="cfg-name" name="name" value="<?= e($name) ?>"
-                               placeholder="e.g. Gaming PC">
-                        <?php if (!empty($errors['name'])): ?>
-                            <span class="field-validation-error"><?= e($errors['name']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="row-container mb-3">
-                    <label class="row-label" for="cfg-type">Type</label>
-                    <select id="cfg-type" name="type" class="a-btn"
-                            style="background:rgba(0,0,0,0.2);width:100%;text-align:left;">
-                        <?php foreach ($pcTypes as $pcType): ?>
-                            <option value="<?= e($pcType) ?>"
-                                    <?= ($type === $pcType) ? 'selected' : '' ?>>
-                                <?= e($pcType) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="row-container mb-3">
-                    <label class="row-label" for="cfg-warranty">Warranty Months</label>
-                    <div style="flex:1;">
-                        <input id="cfg-warranty" name="warranty_months" type="number"
-                               value="<?= $warranty ?>" placeholder="e.g. 12">
-                        <?php if (!empty($errors['warranty_months'])): ?>
-                            <span class="field-validation-error"><?= e($errors['warranty_months']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="row-container mb-3">
-                    <label class="row-label" for="price-multiplier">Price Multiplier</label>
-                    <div style="flex:1;">
-                        <input id="price-multiplier" name="price_multiplier" type="number"
-                               step="0.01" value="<?= number_format($multiplier, 2, '.', '') ?>"
-                               placeholder="e.g. 1.5"
-                               onchange="updateTotalPriceLabel()">
-                        <?php if (!empty($errors['price_multiplier'])): ?>
-                            <span class="field-validation-error"><?= e($errors['price_multiplier']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Chosen-component rows (drag-drop target) -->
-                <div id="row-component-container" class="glass-container no-sticky"
-                     ondragover="onDragOver(event)"
-                     ondrop="onDrop(event, async () => { await setComponentRow(getComponentId(event), 1); })"
-                     style="height:500px;overflow-y:auto;margin-top:0;">
-                    <?php foreach ($bundles as $itemCard): ?>
-                        <?php
-                        $bundleId = (int)($itemCard['id'] ?? 0);
-                        $isEdit   = true; // show editable qty inside _component_row
-                        ?>
-                        <div id="row-<?= $bundleId ?>" data-component-id="<?= $bundleId ?>">
-                            <?php include __DIR__ . '/../Shared/_component_row.php'; ?>
-                        </div>
-                        <?php $isEdit = false; // reset ?>
-                    <?php endforeach; ?>
-                </div>
-
-                <div class="center-container mb-3">
-                    <label for="cfg-desc">Description</label>
-                    <textarea id="cfg-desc" name="description" rows="4"
-                              style="align-content:stretch;"><?= e($desc) ?></textarea>
-                </div>
-
-            </div><!-- /left -->
-
-            <!-- ── Right column: preview + component pool ─────── -->
-            <div class="center-container"
-                 style="display:flex;flex-direction:column;align-items:center;
-                        justify-content:flex-start;gap:10px;margin-top:0;flex:0.4;">
-
-                <label style="margin:0 0 10px 0;font-weight:bold;">PC Configuration Preview</label>
-
-                <img id="pc-thumbnail-img" src="<?= e($img) ?>" alt="preview"
-                     style="max-width:300px;height:auto;border-radius:8px;">
-
-                <input id="file-input" type="file" name="upload_file" class="mt-2"
-                       oninput="previewImage(this,'pc-thumbnail-img')">
-
-                <h2 id="price-label" class="money" style="margin:10px 0;">
-                    <?= money($price) ?>
-                </h2>
-
-                <!-- Browseable component pool (draggable cards) -->
-                <div id="component-card-container" class="grid-container"
-                     style="width:100%;height:350px;overflow-y:auto;">
-                    <?php foreach ($itemCards as $i => $card): ?>
-                        <?php
-                        $cardId  = (int)($card['id'] ?? 0);
-                        $itemCard = $card;
-                        $isEdit   = true;
-                        ?>
-                        <div id="component-<?= $i ?>" draggable="true"
-                             ondragstart="onDragStart(event)"
-                             data-component-id="<?= $cardId ?>"
-                             style="padding:15px;display:flex;flex-direction:column;zoom:0.8;">
-                            <?php include __DIR__ . '/../Shared/_component_card.php'; ?>
-                        </div>
-                        <?php $isEdit = false; ?>
-                    <?php endforeach; ?>
-                </div>
-
-                <div style="zoom:0.8;width:100%;">
-                    <?php include __DIR__ . '/../Shared/_pagination.php'; ?>
-                </div>
-
-            </div><!-- /right -->
-
-        </div><!-- /row-container -->
-
-        <div class="row-container" style="gap:15px;justify-content:flex-start;margin-top:20px;">
-            <button type="submit" onclick="prepareData(event)" class="a-btn">
-                <?= $isEdit ? 'Save Changes' : 'Create Component' ?>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="font-weight:600;">Components</label>
+            <button type="button" class="a-btn"
+                    style="width:auto;padding:8px 18px;margin:0;"
+                    onclick="addComponentRow()">
+                + Add Component
             </button>
-            <a href="javascript:history.back()" class="a-btn"
-               style="background:rgba(0,0,0,0.1);width:auto;">Cancel</a>
         </div>
 
-    </form>
+        <div id="component-header"
+             style="display:none;grid-template-columns:2fr 1.5fr 1.2fr 1fr 1fr 1fr 36px;
+                    gap:8px;padding:0 6px;">
+            <?php foreach (['Name','Brand','Type','Price ($)','Quality (0–10)','Qty',''] as $h): ?>
+                <span style="font-size:0.72rem;text-transform:uppercase;
+                             opacity:0.5;font-weight:600;"><?= $h ?></span>
+            <?php endforeach; ?>
+        </div>
+
+        <div id="component-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.08);">
+        <button type="button" class="a-btn"
+                style="width:auto;padding:12px 32px;margin:0;"
+                onclick="submitConfiguration(<?= $id ?>, <?= $isEdit ? 'true' : 'false' ?>)">
+            <?= $isEdit ? 'Save Changes' : 'Create Configuration' ?>
+        </button>
+        <a href="<?= url('pc_list') ?>" class="a-btn"
+           style="background:rgba(0,0,0,0.08);color:#111;width:auto;
+                  padding:12px 24px;margin:0;text-decoration:none;display:flex;
+                  align-items:center;">
+            Cancel
+        </a>
+    </div>
+
 </div>
 
+<script>
+const PREFILLED_BUNDLES = <?= json_encode(array_values($bundles)) ?>;
+</script>
 <?php
 $pageContent = ob_get_clean();
 
 ob_start();
 ?>
-<script src="/js/image.js"></script>
-<script type="module" src="/js/elements.js"></script>
-<script src="/js/drag-drop.js"></script>
-<script type="module">
-    import { updatePriceLabel, getTotal } from '/js/price.js';
+<script src="<?= BASE_URL ?>js/image.js"></script>
+<script>
+function previewImageFromFile(input, imgId) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => document.getElementById(imgId).src = e.target.result;
+    reader.readAsDataURL(file);
+}
 
-    const priceLabelId           = 'price-label';
-    const priceMultiplierInputId = 'price-multiplier';
-    const rowContainer           = document.getElementById('row-component-container');
+let rowIndex = 0;
 
-    function prepareData(event) {
-        const rows = rowContainer.querySelectorAll('[data-component-id]');
-        if (rows.length === 0) console.warn('No components selected.');
+function buildRow(data = {}) {
+    const i   = rowIndex++;
+    const def = { name:'', brand:'', type:'', price:'', quality:'', quantity:1, ...data };
 
-        const components = Array.from(rows).map(row => {
-            const id       = row.getAttribute('data-component-id');
-            const qtyInput = row.querySelector('input[type="number"]')
-                          || document.getElementById(`quantity-input-${id}`);
-            return {
-                componentId: parseInt(id),
-                quantity:    parseInt(qtyInput?.value || '1')
-            };
-        }).filter(c => !isNaN(c.componentId) && c.quantity > 0);
+    const row = document.createElement('div');
+    row.className   = 'component-row glass-container';
+    row.dataset.row = i;
+    row.style.cssText = `
+        display:grid;
+        grid-template-columns:2fr 1.5fr 1.2fr 1fr 1fr 1fr 36px;
+        gap:8px;align-items:center;padding:10px 14px;margin:0;
+    `;
 
-        const jsonField = document.getElementById('components-json');
-        if (jsonField) {
-            jsonField.value = JSON.stringify(components);
-        } else {
-            console.error('components-json field not found!');
-            event.preventDefault();
-        }
+    const field = (name, placeholder, value, type='text', extra='') =>
+        `<input data-field="${name}" type="${type}" placeholder="${placeholder}"
+                value="${value}" ${extra}
+                oninput="recalcSummary()"
+                style="margin:0;padding:8px 10px;font-size:0.9rem;">`;
+
+    row.innerHTML = `
+        ${field('name',     'Name',   def.name)}
+        ${field('brand',    'Brand',  def.brand)}
+        ${field('type',     'Type',   def.type)}
+        ${field('price',    '0.00',   def.price,   'number', 'min="0" step="0.01"')}
+        ${field('quality',  '0–10',   def.quality, 'number', 'min="0" max="10" step="0.1"')}
+        ${field('quantity', '1',      def.quantity,'number', 'min="1" step="1"')}
+        <button type="button"
+                onclick="removeRow(this)"
+                style="width:36px;height:36px;padding:0;margin:0;font-size:1.1rem;
+                       display:flex;align-items:center;justify-content:center;
+                       background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.2);
+                       color:#111;border-radius:8px;cursor:pointer;flex-shrink:0;">
+            ×
+        </button>
+    `;
+    return row;
+}
+
+function addComponentRow(data = {}) {
+    const list = document.getElementById('component-list');
+    list.appendChild(buildRow(data));
+    document.getElementById('component-header').style.display = 'grid';
+    recalcSummary();
+}
+
+function removeRow(btn) {
+    btn.closest('.component-row').remove();
+    const list = document.getElementById('component-list');
+    if (!list.querySelector('.component-row'))
+        document.getElementById('component-header').style.display = 'none';
+    recalcSummary();
+}
+
+function recalcSummary() {
+    const rows     = document.querySelectorAll('.component-row');
+    let totalPrice = 0;
+    let qualitySum = 0;
+    let qualityN   = 0;
+
+    rows.forEach(row => {
+        const price    = parseFloat(row.querySelector('[data-field="price"]').value)    || 0;
+        const qty      = parseInt(  row.querySelector('[data-field="quantity"]').value) || 1;
+        const quality  = parseFloat(row.querySelector('[data-field="quality"]').value);
+
+        totalPrice += price * qty;
+        if (!isNaN(quality)) { qualitySum += quality; qualityN++; }
+    });
+
+    document.getElementById('summary-price').textContent =
+        '$' + totalPrice.toFixed(2);
+    document.getElementById('summary-quality').textContent =
+        qualityN > 0 ? (qualitySum / qualityN).toFixed(1) : '—';
+    document.getElementById('summary-count').textContent = rows.length;
+}
+
+function collectComponents() {
+    return Array.from(document.querySelectorAll('.component-row')).map(row => ({
+        name:     row.querySelector('[data-field="name"]').value.trim(),
+        brand:    row.querySelector('[data-field="brand"]').value.trim(),
+        type:     row.querySelector('[data-field="type"]').value.trim(),
+        price:    parseFloat(row.querySelector('[data-field="price"]').value)    || 0,
+        quality:  parseFloat(row.querySelector('[data-field="quality"]').value)  || 0,
+        quantity: parseInt(  row.querySelector('[data-field="quantity"]').value) || 1,
+    }));
+}
+
+function submitConfiguration(id, isEdit) {
+    const name       = document.getElementById('cfg-name').value.trim();
+    const fileInput  = document.getElementById('file-input');
+    const imageFile  = fileInput.files[0] ?? null;
+    const components = collectComponents();
+
+    const totalPrice  = components.reduce((s, c) => s + c.price * c.quantity, 0);
+    const qualities   = components.map(c => c.quality).filter(q => !isNaN(q));
+    const avgQuality  = qualities.length ? qualities.reduce((a, b) => a + b, 0) / qualities.length : 0;
+
+    console.log('submitConfiguration called', {
+        id,
+        isEdit,
+        name,
+        imageFile,
+        components,
+        computed: { totalPrice, avgQuality },
+    });
+
+    // TODO: build FormData and POST to your backend endpoint, e.g.:
+    //
+    // const fd = new FormData();
+    // fd.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
+    // fd.append('id',          id);
+    // fd.append('name',        name);
+    // fd.append('total_price', totalPrice);
+    // fd.append('avg_quality', avgQuality);
+    // fd.append('components',  JSON.stringify(components));
+    // if (imageFile) fd.append('image', imageFile);
+    //
+    // const res = await fetch('index.php?action=save_pc_configuration', { method:'POST', body: fd });
+    // const data = await res.json();
+    // if (data.success) window.location.href = 'index.php?page=pc_list';
+
+    alert(`[Demo] Would ${isEdit ? 'update' : 'create'} "${name}" with ${components.length} component(s).\nTotal: $${totalPrice.toFixed(2)} | Avg quality: ${avgQuality.toFixed(1)}\n\nSee browser console for full payload.`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (PREFILLED_BUNDLES && PREFILLED_BUNDLES.length) {
+        PREFILLED_BUNDLES.forEach(b => addComponentRow(b));
+    } else {
+        addComponentRow();
     }
-
-    function getComponentId(event) {
-        const elementId = event.dataTransfer.getData('text/plain');
-        const element   = document.getElementById(elementId);
-        if (element) return element.getAttribute('data-component-id');
-        const target = event.target.closest('[data-component-id]');
-        return target ? target.getAttribute('data-component-id') : null;
-    }
-
-    async function setComponentRow(id, quantity) {
-        if (id === null) return;
-        const existing = rowContainer.querySelector(`[data-component-id="${id}"]`);
-        if (!existing) {
-            // Fetch rendered partial from PHP endpoint (placeholder route)
-            const response = await fetch(`/pc-configuration/get-component-row?componentId=${id}`);
-            if (response.ok) {
-                const html    = await response.text();
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                const newRow  = tempDiv.firstElementChild;
-                newRow.id     = `row-${id}`;
-                newRow.setAttribute('data-component-id', id);
-                rowContainer.appendChild(newRow);
-            }
-        } else {
-            if (quantity < 0) {
-                existing.remove();
-            } else {
-                const input = document.getElementById(`quantity-input-${id}`);
-                if (input) {
-                    input.value = (+input.value) + Number(quantity);
-                    input.dispatchEvent(new Event('input'));
-                }
-            }
-        }
-        updateTotalPriceLabel();
-    }
-
-    function updateTotalPriceLabel() {
-        const multiplier = parseFloat(document.getElementById(priceMultiplierInputId).value) || 1;
-        const prices     = Array.from(rowContainer.querySelectorAll('[total-price-id]'))
-                               .map(el => parseFloat(el.value) || 0);
-        const total      = prices.reduce((acc, v) => acc + v, 0) * multiplier;
-        updatePriceLabel(priceLabelId, total);
-    }
-
-    window.updateTotalPriceLabel = updateTotalPriceLabel;
-    window.setComponentRow       = setComponentRow;
-    window.getComponentId        = getComponentId;
-    window.prepareData           = prepareData;
+});
 </script>
 <?php
 $pageScripts = ob_get_clean();
-
-include __DIR__ . '/../Shared/_layout.php';

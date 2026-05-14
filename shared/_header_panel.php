@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/_helpers.php';
 
-$pageSize       = isInRole('Admin') ? 29 : 30;
-$balanceLabel   = isInRole('Customer') ? 'Personal Balance' : 'Company Balance';
+$pageSize       = isInRole(UserRole::Admin) ? 29 : 30;
+$balanceLabel   = isCustomer() ? 'Personal Balance' : 'Company Balance';
 $balance        = $balance ?? 0.00;
 ?>
 
@@ -29,11 +29,11 @@ $balance        = $balance ?? 0.00;
 
                 <a href="/client/profile" class="a-btn">Profile</a>
 
-                <?php if (isInRole('Customer')): ?>
+                <?php if (isCustomer()): ?>
                     <a href="/client/orders/cart" class="a-btn">Cart</a>
                 <?php endif; ?>
 
-                <?php if (isInRole('Admin')): ?>
+                <?php if (isInRole(UserRole::Admin)): ?>
                     <a href="/staff/component-order" class="a-btn">Orders</a>
                 <?php else: ?>
                     <a href="/client/orders" class="a-btn">Orders</a>
@@ -42,11 +42,11 @@ $balance        = $balance ?? 0.00;
                 <a href="/pc-configurations?pageSize=<?= $pageSize ?>" class="a-btn">PC Configurations</a>
                 <a href="/components?pageSize=<?= $pageSize ?>" class="a-btn">Components</a>
 
-                <?php if (isInRole('Staff') || isInRole('Admin')): ?>
+                <?php if (isInRole(UserRole::Staff) || isInRole(UserRole::Admin)): ?>
                     <button onclick="downloadReport()" class="a-btn">Log Reports</button>
                 <?php endif; ?>
 
-                <?php if (isInRole('Admin')): ?>
+                <?php if (isInRole(UserRole::Admin)): ?>
                     <a href="/admin/suppliers" class="a-btn">Suppliers</a>
                     <a href="/admin/panel" class="a-btn">Admin Panel</a>
                 <?php endif; ?>

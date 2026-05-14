@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../index.php';
 
 $pageTitle = 'Register';
 $errors    = $errors ?? [];
@@ -12,16 +11,13 @@ $fields = [
     ['name' => 'name',             'label' => 'Name',             'type' => 'text'],
     ['name' => 'phone',            'label' => 'Phone',            'type' => 'tel'],
 ];
-
-ob_start();
 ?>
 
 <div class="glass-container">
     <div class="container">
         <h3>Registration</h3>
-        <form action="<?= BASE_URL ?>/shared/_auth.php?action=register" method="post">
+        <form action="<?= BASE_URL ?>index.php?page=register" method="post">
             <?= csrfField() ?>
-
             <?php foreach ($fields as $field): ?>
                 <div class="row-container mb-3">
                     <label class="row-label" for="<?= e($field['name']) ?>">
@@ -46,3 +42,7 @@ ob_start();
 
     </div>
 </div>
+<?php
+$pageContent = ob_get_clean();
+ob_start();
+?>

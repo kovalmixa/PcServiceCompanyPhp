@@ -1,13 +1,9 @@
 <?php
-require_once __DIR__ . '/../index.php';
-
 $pageTitle = 'Login';
 $errors    = $errors ?? [];
 $old       = $old    ?? [];
-
-ob_start();
 ?>
-<form action="<?= BASE_URL ?>shared/_auth.php?action=login" method="post">
+<form action="<?= BASE_URL ?>index.php?page=login" method="post">
     <?= csrfField() ?>
     <div class="glass-container">
         <div class="col_container">
@@ -42,3 +38,7 @@ ob_start();
         </div>
     </div>
 </form>
+<?php
+$pageContent = ob_get_clean();
+ob_start();
+?>

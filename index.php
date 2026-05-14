@@ -1,7 +1,40 @@
 <?php
-    require_once __DIR__ . '/shared/_auth.php';
-?>
+require_once __DIR__ . '/shared/_helpers.php';
+require_once __DIR__ . '/shared/_auth.php';
 
+$page = $_GET['page'] ?? 'home';
+$pageContent = '';
+$pageScripts = '';
+
+switch ($page) {
+    case 'login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') login(); 
+        require_once __DIR__ . '/auth/login.php';
+        break;
+    case 'register':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') register(); 
+        require __DIR__ . '/auth/register.php';
+        break;
+    case 'admin_panel':
+        if (isInRole(UserRole::Admin)) require __DIR__ . '/admin_panel/index.php';
+        else { ob_start(); echo "<h2>Access denied</h2>"; $pageContent = ob_get_clean(); }
+        break;
+    case 'profile':
+        require __DIR__ . '/profile/index.php';
+        break;
+    case 'pc_configuration':
+        require __DIR__ . '/pc_configuration/index.php';
+        break;
+    case 'pc_configuration_edit':
+        require __DIR__ . '/pc_configuration/edit.php';
+        break;
+    case 'home':
+    case 'pc_list':
+    default:
+        require __DIR__ . '/pc_configurations/index.php';
+        break;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,16 +50,15 @@
     </header>
 
     <div class="center-container">
-        <?= $pageContent ?? '' ?>
+        <?= $pageContent ?>
     </div>
 
     <footer class="border-top footer text-muted">
         <div class="glass-container">
-            <div>
-                &copy; 2026 - PC Store - <a href="/privacy">Privacy</a>
-            </div>
+            <div>&copy; 2026 - PC Store</div>
         </div>
     </footer>
-    <?= $pageScripts ?? '' ?>
+
+    <?= $pageScripts ?>
 </body>
 </html>

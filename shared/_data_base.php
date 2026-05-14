@@ -5,7 +5,7 @@ $pass = '';
 $db_name = 'pcconfigurationcompanyphp';
 $charset = 'utf8mb4';
 
-$conn = new mysqli($host, $user, $pass, $db_name);
+$db = new mysqli($host, $user, $pass, $db_name);
 
 $dsn = "mysql:host=$host;dbname=$db_name;charset=$charset";
 $options = [
@@ -20,5 +20,5 @@ try {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
 
-if ($conn->connect_error) die("Connection error: " . $conn->connect_error);
+if ($db->connect_error) die("Connection error: " . $db->connect_error);
 ?>
