@@ -22,10 +22,10 @@ ob_start();
         <?= csrfField() ?>
         <?php foreach ($fields as $field): ?>
             <div class="row-container mb-3">
-                <label class="row-label" for="<?= e($field['name']) ?>">
+                <label class="row-label" style="padding-left: 1rem;" for="<?= e($field['name']) ?>">
                     <?= e($field['label']) ?>
                 </label>
-                <div style="flex:1;">
+                <div style="flex:1; padding-right: 1rem;">
                     <input id="<?= e($field['name']) ?>"
                             name="<?= e($field['name']) ?>"
                             type="<?= e($field['type']) ?>"

@@ -10,7 +10,7 @@
                 <a class="a-btn" href="<?= BASE_URL ?>index.php?page=profile">Profile</a>
             <?php endif; ?>
 
-            <a class="a-btn" href="<?= BASE_URL ?>index.php?page=pc_list">PC Configurations</a>
+            <a class="a-btn" href="<?= BASE_URL ?>index.php?page=pc_list&p=1">PC Configurations</a>
 
             <?php if (isInRole(UserRole::Admin)): ?>
                 <a class="a-btn" href="<?= BASE_URL ?>index.php?page=admin_panel">Admin Panel</a>

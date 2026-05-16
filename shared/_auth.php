@@ -116,7 +116,6 @@ function logout(): void {
     exit;
 }
 
-// ── Dispatch ─────────────────────────────────────────────────────────────────
 $action = $_GET['action'] ?? '';
 switch ($action) {
     case 'login':    login();    break;

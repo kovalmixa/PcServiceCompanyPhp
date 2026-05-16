@@ -8,9 +8,7 @@ $id        = (int)  ($config['id']         ?? 0);
 $name      =         $config['name']        ?? '';
 $imagePath =         $config['image_path']  ?? '';
 $img       = imgSrc($imagePath ?: null);
-
-$bundles = $config['component_bundles'] ?? [];
-
+$components = $config['components'] ?? [];
 $pageTitle = $isEdit ? 'Edit PC Configuration' : 'New PC Configuration';
 
 ob_start();
@@ -30,8 +28,7 @@ ob_start();
     <div style="display:flex;flex-direction:column;gap:6px;">
         <label for="cfg-name" style="font-weight:600;">Configuration Name</label>
         <input id="cfg-name" name="name" value="<?= e($name) ?>"
-               placeholder="e.g. Gaming Beast Pro"
-               style="max-width:480px;">
+               placeholder="e.g. Gaming Beast Pro">
         <?php if (!empty($errors['name'])): ?>
             <span class="field-validation-error"><?= e($errors['name']) ?></span>
         <?php endif; ?>
@@ -118,7 +115,7 @@ ob_start();
 </div>
 
 <script>
-const PREFILLED_BUNDLES = <?= json_encode(array_values($bundles)) ?>;
+const PREFILLED_BUNDLES = <?= json_encode(array_values($components)) ?>;
 </script>
 <?php
 $pageContent = ob_get_clean();
@@ -223,41 +220,58 @@ function collectComponents() {
     }));
 }
 
-function submitConfiguration(id, isEdit) {
+async function submitConfiguration(id, isEdit) {
     const name       = document.getElementById('cfg-name').value.trim();
     const fileInput  = document.getElementById('file-input');
     const imageFile  = fileInput.files[0] ?? null;
     const components = collectComponents();
-
-    const totalPrice  = components.reduce((s, c) => s + c.price * c.quantity, 0);
-    const qualities   = components.map(c => c.quality).filter(q => !isNaN(q));
-    const avgQuality  = qualities.length ? qualities.reduce((a, b) => a + b, 0) / qualities.length : 0;
-
+    
     console.log('submitConfiguration called', {
         id,
         isEdit,
         name,
         imageFile,
         components,
-        computed: { totalPrice, avgQuality },
     });
+    if (!name) {
+        alert('Please provide a configuration name.');
+        return; 
+    }
+    if (!components || components.length === 0) {
+        alert('Add at least one component to the configuration.');
+        return;
+    }
 
-    // TODO: build FormData and POST to your backend endpoint, e.g.:
-    //
-    // const fd = new FormData();
-    // fd.append('csrf_token', document.querySelector('meta[name="csrf-token"]').content);
-    // fd.append('id',          id);
-    // fd.append('name',        name);
-    // fd.append('total_price', totalPrice);
-    // fd.append('avg_quality', avgQuality);
-    // fd.append('components',  JSON.stringify(components));
-    // if (imageFile) fd.append('image', imageFile);
-    //
-    // const res = await fetch('index.php?action=save_pc_configuration', { method:'POST', body: fd });
-    // const data = await res.json();
-    // if (data.success) window.location.href = 'index.php?page=pc_list';
+    const fd = new FormData();
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        fd.append('csrf_token', csrfMeta.content);
+    }
+    fd.append('id', id > 0 ? id : '');
+    fd.append('name', name);
+    fd.append('components', JSON.stringify(components));
+    if (imageFile) fd.append('image', imageFile);
+    
+   try {
+        const res = await fetch('index.php?action=save_pc_configuration', { method: 'POST', body: fd });
+        const responseText = await res.text();
 
-    alert(`[Demo] Would ${isEdit ? 'update' : 'create'} "${name}" with ${components.length} component(s).\nTotal: $${totalPrice.toFixed(2)} | Avg quality: ${avgQuality.toFixed(1)}\n\nSee browser console for full payload.`);
+        try {
+            const data = JSON.parse(responseText);
+            if (data.success) {
+                alert(`Configuration "${name}" successfully saved!`);
+                window.location.href = 'index.php?page=pc_configuration';
+            } else {
+                alert('Server error: ' + data.error);
+            }
+        } catch (jsonError) {
+            console.error('The server did not return JSON. Server response:', responseText);
+            alert('Critical server error. Details in the browser console.');
+        }
+    } catch (fetchError) {
+        console.error('Network error:', fetchError);
+        alert('Failed to connect to the server.');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

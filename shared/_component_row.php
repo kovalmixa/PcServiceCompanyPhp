@@ -1,34 +1,54 @@
 <?php
 require_once __DIR__ . '/_helpers.php';
 
-$isEdit       = $isEdit ?? false;
-$id           = (int)  ($itemCard['id']       ?? 0);
-$price        = (float)($itemCard['price']    ?? 0);
-$quantity     = (int)  ($itemCard['quantity'] ?? 0);
+$isEdit = $isEdit ?? false;
+
+$itemCardData = is_object($componentData) ? json_decode(json_encode($componentData), true) : $componentData;
+
+$id           = (int)  ($itemCardData['id']           ?? 0);
+$name         =         $itemCardData['name']         ?? '';
+$brand        =         $itemCardData['brand']        ?? '';
+$type         =         $itemCardData['type']         ?? '';
+$price        = (float)($itemCardData['price']        ?? 0);
+$quality      =         $itemCardData['quality']      ?? 'N/A';
+$quantity     = (int)  ($itemCardData['quantity']     ?? 1);
+
 $initialPrice = $price * $quantity;
 ?>
 
-<div style="zoom: 0.75">
-    <div class="row-container"
-         style="align-items:stretch;gap:10px;margin-bottom:15px;padding:0;">
+<div id="row-<?= $id ?>" style="zoom: 0.75; width: 100%;">
+    <div class="glass-container row-container" 
+         style="display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:10px; padding:15px 20px;">
+        
+        <span style="flex:2; font-weight:600; font-size:1rem; text-align:left;">
+            <?php if (!$isEdit): ?>
+                <a href="/component/<?= $id ?>" style="text-decoration:none; color:inherit;"><?= e($name) ?></a>
+            <?php else: ?>
+                <?= e($name) ?>
+            <?php endif; ?>
+        </span>
 
-        <?php include __DIR__ . '/_item_card.php'; ?>
+        <span style="flex:1; opacity:0.85;"><?= e($brand) ?></span>
 
-        <div class="glass-container"
-             style="display:flex;flex-direction:column;justify-content:center;align-items:center;
-                    white-space:nowrap;padding:0 20px;margin:0;min-width:100px;">
-            <strong style="font-size:0.75rem;opacity:0.8;text-transform:uppercase;">Quantity</strong>
+        <span style="flex:1; opacity:0.85;"><?= e($type) ?></span>
 
+        <span class="money" style="flex:1; font-weight:600;"><?= money($price) ?></span>
+
+        <span style="flex:1; opacity:0.85;"><?= e($quality) ?></span>
+
+        <div style="flex:1; display:flex; justify-content:center; align-items:center;">
             <?php if ($isEdit): ?>
-                <input type="hidden"
-                       id="total-price-<?= $id ?>"
-                       total-price-id="price-label-<?= $id ?>"
+                <input type="hidden" 
+                       id="total-price-<?= $id ?>" 
+                       total-price-id="price-label-<?= $id ?>" 
                        value="<?= $initialPrice ?>">
 
-                <input type="number"
-                       id="quantity-input-<?= $id ?>"
-                       name="quantity"
+                <input type="number" 
+                       id="quantity-input-<?= $id ?>" 
+                       name="quantity" 
+                       min="0"
                        value="<?= $quantity ?>"
+                       style="width:60px; text-align:center; padding:4px;"
                        oninput="
                            let total = getTotal(<?= $price ?>, this.value);
                            if (total <= 0) document.getElementById('row-<?= $id ?>').remove();
@@ -40,20 +60,19 @@ $initialPrice = $price * $quantity;
             <?php endif; ?>
         </div>
 
-        <div class="glass-container"
-             style="display:flex;align-items:center;justify-content:center;
-                    width:150px;gap:10px;margin:0;padding:0 15px;">
-            <strong id="price-label-<?= $id ?>" class="money">
+        <div style="flex:1.5; display:flex; align-items:center; justify-content:flex-end; gap:15px;">
+            <strong id="price-label-<?= $id ?>" class="money" style="font-size:1.1rem;">
                 <?= money($initialPrice) ?>
             </strong>
-        </div>
 
-        <?php if ($isEdit): ?>
-            <button type="button" class="red-btn" style="font-size:300%;"
-                    onclick="document.getElementById('row-<?= $id ?>').remove(); updateTotalPriceLabel()">
-                &times;
-            </button>
-        <?php endif; ?>
+            <?php if ($isEdit): ?>
+                <button type="button" class="red-btn" 
+                        style="font-size:1.5rem; line-height:1; width:30px; height:30px; display:flex; align-items:center; justify-content:center; padding:0; border-radius:5px;" 
+                        onclick="document.getElementById('row-<?= $id ?>').remove(); updateTotalPriceLabel()">
+                    &times;
+                </button>
+            <?php endif; ?>
+        </div>
 
     </div>
 </div>

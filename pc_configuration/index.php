@@ -1,19 +1,17 @@
 <?php
 require_once __DIR__ . '/../shared/_helpers.php';
 
-// ── Data (placeholder – load from DB by $_GET['id']) ─────────────────────────
-$config      = $config ?? [];
-$id          = (int)  ($config['id']               ?? 0);
-$name        =         $config['name']              ?? '';
-$type        =         $config['type']              ?? '';
-$price       = (float)($config['price']            ?? 0);
-$warrantyM   = (int)  ($config['warranty_months']  ?? 0);
-$companyId   = (int)  ($config['company_id']       ?? 0);
-$description =         $config['description']       ?? '';
-$img         = imgSrc($config['image_path']        ?? null);
-$bundles     =         $config['component_bundles'] ?? [];
+$config     = $config     ?? [];
+$id         = (int)       ($config['id']         ?? 0);
+$pc_name    =             $config['name']        ?? 'PC Configuration';
+$pc_image   =             $config['image_path']  ?? null;
+$components =             $config['components']  ?? [];
 
-// ── Render ────────────────────────────────────────────────────────────────────
+$total_price = 0;
+foreach ($components as $component) {
+    $total_price += (float)($component['price'] ?? 0) * (int)($component['quantity'] ?? 1);
+}
+
 ob_start();
 ?>
 <?= csrfField() ?>
@@ -24,20 +22,16 @@ ob_start();
 
     <div style="display:flex;justify-content:space-between;align-items:baseline;
                 border-bottom:1px solid rgba(0,0,0,0.1);padding-bottom:15px;">
-        <h1 style="margin:0;font-size:2.5rem;font-weight:700;"><?= e($name) ?></h1>
-        <strong style="background:#333;padding:4px 12px;border-radius:6px;
-                       font-size:0.8rem;font-weight:bold;text-transform:uppercase;color:#fff;">
-            <?= e($type) ?>
-        </strong>
+        <h1 style="margin:0;font-size:2.5rem;font-weight:700;"><?= e($pc_name) ?></h1>
     </div>
 
-    <div style="display:grid;grid-template-columns:350px 1fr;gap:40px;">
+    <div style="display:grid;grid-template-columns:350px 1fr;gap:40px;align-items:start;">
 
         <div style="display:flex;flex-direction:column;gap:20px;">
             <div style="width:100%;height:250px;border-radius:15px;overflow:hidden;
                         background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.1);">
-                <img src="<?= e($img) ?>" alt="<?= e($name) ?>"
-                     style="width:100%;height:100%;object-fit:cover;">
+                <img src="<?= e(imgSrc($pc_image)) ?>" alt="<?= e($pc_name) ?>"
+                     style="width:100%;height:100%;object-fit:contain;">
             </div>
 
             <div style="background:rgba(0,0,0,0.04);padding:20px;border-radius:15px;
@@ -45,46 +39,43 @@ ob_start();
                 <strong style="display:block;font-size:0.9rem;opacity:0.5;
                                margin-bottom:5px;text-transform:uppercase;">Price per unit</strong>
                 <strong class="money" style="display:block;font-size:2.2rem;font-weight:800;">
-                    <?= money($price) ?>
+                    <?= money($total_price) ?>
                 </strong>
             </div>
-
-            <strong>Warranty: <?= $warrantyM ?> months</strong>
-
-            <div style="display:flex;flex-direction:column;gap:8px;">
-                <strong style="font-size:0.8rem;opacity:0.5;text-transform:uppercase;">Description</strong>
-                <div style="font-size:0.9rem;line-height:1.5;background:rgba(0,0,0,0.03);
-                            padding:15px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);">
-                    <?= e($description ?: 'No description provided.') ?>
-                </div>
-            </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:15px;">
-            <strong style="font-size:0.8rem;opacity:0.5;text-transform:uppercase;">
-                Included Components
-            </strong>
-            <div style="overflow-y:auto;display:flex;flex-direction:column;gap:10px;">
-                <?php foreach ($bundles as $itemCard): ?>
-                    <div style="flex-shrink:0;width:100%;">
-                        <?php include __DIR__ . '/../shared/_component_row.php'; ?>
-                    </div>
+        <div class="included-components-box" style="display:flex; flex-direction:column; gap:10px;">
+            
+            <div style="display:flex; justify-content:space-between; padding: 0 20px; margin-bottom: 5px;">
+                <?php foreach (['Name','Brand','Type','Price ($)','Quality (0–10)','Qty',''] as $h): ?>
+                    <span style="font-size:0.72rem; text-transform:uppercase; opacity:0.5; font-weight:600; flex: 1; text-align: left;"><?= $h ?></span>
                 <?php endforeach; ?>
-                <?php if (empty($bundles)): ?>
-                    <p style="opacity:0.5;">No components listed.</p>
+            </div>
+
+            <div class="components-list" style="display:flex; flex-direction:column; gap:10px;">
+                <?php if (!empty($components)): ?>
+                    <?php foreach ($components as $componentData): ?>
+                        <?php 
+                        $isEdit = false; 
+                        include __DIR__ . '/../shared/_pc_configuration_card.php'; 
+                        ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p style="opacity:0.5; padding:40px; text-align:center;">No components listed.</p>
                 <?php endif; ?>
             </div>
-        </div>
 
+        </div>
     </div>
 
     <div style="padding-top:30px;border-top:1px solid rgba(0,0,0,0.1);
-                display:flex;justify-content:space-between;align-items:flex-end;">
+                display:flex;justify-content:space-between;align-items:flex-end;margin-top:15px;">
+        
         <div style="display:flex;gap:40px;">
             <div style="display:flex;flex-direction:column;gap:4px;">
                 <label style="font-size:0.75rem;opacity:0.5;text-transform:uppercase;font-weight:bold;">Quantity</label>
                 <input id="quantity-input"
-                       oninput="updatePriceLabel('price-value', getTotal(<?= $price ?>, this.value))"
+                       oninput="updatePriceLabel('price-value', getTotal(<?= $total_price ?>, this.value))"
                        type="number" value="1" min="1"
                        style="background:rgba(0,0,0,0.05);border:1px solid #bbb;
                               border-radius:8px;padding:10px;width:80px;outline:none;">
@@ -93,7 +84,7 @@ ob_start();
                 <label style="font-size:0.75rem;opacity:0.5;text-transform:uppercase;font-weight:bold;">Total Sum</label>
                 <h2 id="price-value" class="money"
                     style="margin:0;font-size:2.2rem;font-weight:800;line-height:1;">
-                    <?= money($price) ?>
+                    <?= money($total_price) ?>
                 </h2>
             </div>
         </div>
@@ -101,7 +92,7 @@ ob_start();
         <div style="display:flex;gap:20px;align-items:center;">
             <?php if (isCustomer()): ?>
                 <button class="a-btn" style="min-width:200px;padding:15px;"
-                        onclick="handleOrder('<?= $id ?>', getValue('quantity-input'), <?= $companyId ?>, false)">
+                        onclick="handleOrder('<?= $id ?>', getValue('quantity-input'), <?= $companyId ?? 0 ?>, false)">
                     Add to Cart
                 </button>
             <?php else: ?>
@@ -117,8 +108,11 @@ ob_start();
                 ← Back
             </a>
         </div>
+
     </div>
+
 </div>
+
 <?php
 $pageContent = ob_get_clean();
 

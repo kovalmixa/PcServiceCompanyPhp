@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/../shared/_helpers.php';
 
-$configurations = $configurations ?? [];
-$totalPages     = (int)($totalPages ?? 1);
-$currentPage    = (int)($_GET['p'] ?? 1);
+/** 
+ * @var array|object[] $configurations
+ * @var array $paginationData
+*/
 
 ob_start();
 ?>
@@ -14,8 +15,7 @@ ob_start();
 <div style="max-width:1480px;margin:0 auto;padding:0 20px;">
     <div class="grid-container">
         <?php if (isAdminOrStaff()): ?>
-            <a href="<?= url('pc_configuration_edit') ?>"
-               style="display:block;text-decoration:none;height:100%;">
+            <a href="index.php?page=pc_configuration_edit" style="display:block;text-decoration:none;height:100%;">
                 <div class="glass-container"
                      style="height:440px;display:flex;align-items:center;justify-content:center;
                             border-radius:16px;cursor:pointer;transition:all 0.2s ease;">
@@ -24,18 +24,24 @@ ob_start();
             </a>
         <?php endif; ?>
 
-        <?php foreach ($configurations as $itemCard): ?>
-            <?php include __DIR__ . '/../shared/_pc_configuration_card.php'; ?>
-        <?php endforeach; ?>
+        <?php 
+        foreach ($configurations as $configItem): 
+            include __DIR__ . '/../shared/_pc_configuration_card.php'; 
+        
+        endforeach; 
+        ?>
 
         <?php if (empty($configurations)): ?>
             <p style="opacity:0.5;padding:40px;">No PC configurations found.</p>
         <?php endif; ?>
-
     </div>
 
-    <?php if ($totalPages > 1): ?>
-        <?php include __DIR__ . '/../shared/_pagination.php'; ?>
+    <?php if (isset($paginationData) && $paginationData['has_pages']): ?>
+        <?php 
+        $totalPages = $paginationData['total'];
+        $currentPage = $paginationData['current'];
+        include __DIR__ . '/../shared/_pagination.php'; 
+        ?>
     <?php endif; ?>
 </div>
 <?php
