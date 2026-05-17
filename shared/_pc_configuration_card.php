@@ -1,16 +1,33 @@
 <?php
 require_once __DIR__ . '/_helpers.php';
 
-if (!isset($configItem) || !($configItem instanceof PcConfiguration)) {
-    return;
-}
+if (!isset($configItem) || !($configItem instanceof PcConfiguration)) return;
 
 $isEdit    = $isEdit ?? false;
-$id        = $configItem->id;
+$conf_id   = $configItem->id;
 $name      = $configItem->name;
 $brand     = $configItem->getBrand();
 $price     = $configItem->getPrice();
 $img       = imgSrc($configItem->image_path);
+
+$components = $configItem->components ?? [];
+$compBrands = [];
+$qualitySum = 0;
+$qualityCount = 0;
+
+foreach ($components as $component) {
+    $compArray = is_object($component) ? (array)$component : $component;
+    
+    if (!empty($compArray['brand'])) $compBrands[] = trim($compArray['brand']);
+    if (isset($compArray['quality']) && $compArray['quality'] !== '') {
+        $qualitySum += (float)$compArray['quality'];
+        $qualityCount++;
+    }
+}
+
+$uniqueBrands = array_unique($compBrands);
+$brandsList = !empty($uniqueBrands) ? implode(', ', $uniqueBrands) : '—';
+$avgQuality = $qualityCount > 0 ? round($qualitySum / $qualityCount, 1) : '—';
 ?>
 
 <div class="row-container" style="align-items:stretch;gap:10px;margin-bottom:15px;padding:0;">
@@ -25,7 +42,7 @@ $img       = imgSrc($configItem->image_path);
                     <?php if (isAdminOrStaff()): ?>
                         <button type="button" class="red-btn"
                                 onclick="if(confirm('Delete this configuration?'))
-                                    fetch('index.php?action=delete_pc_configuration&id=<?= $id ?>',{method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}})"
+                                    fetch('index.php?action=delete_pc_configuration&id=<?= $conf_id?>',{method:'POST',headers:{'X-CSRF-Token':document.querySelector('meta[name=csrf-token]').content}})"
                                 style="width:38px;height:38px;padding:0;font-size:1.1rem;border-radius:8px;flex-shrink:0;">
                             &#x2715;
                         </button>
@@ -35,7 +52,7 @@ $img       = imgSrc($configItem->image_path);
                 <?php if ($isEdit): ?>
                     <img src="<?= e($img) ?>" alt="<?= e($name) ?>">
                 <?php else: ?>
-                    <a href="index.php?page=pc_configuration&id=<?= $id ?>">
+                    <a href="index.php?page=pc_configuration&id=<?= $conf_id?>">
                         <img src="<?= e($img) ?>" alt="<?= e($name) ?>">
                     </a>
                 <?php endif; ?>
@@ -45,11 +62,22 @@ $img       = imgSrc($configItem->image_path);
                 </div>
 
                 <?php if (!$isEdit): ?>
-                    <h2 class="money" style="margin:0;"><?= money($price) ?></h2>
+                    <div class="col-container" style="margin-top:5px;">
+                        <strong>Price: <span class="money" style="font-size:1.1rem;font-weight:700;"><?= money($price) ?></span></strong>
+                    </div>
+
+                    <div class="col-container">
+                        <strong>Avg Quality: <span><?= $avgQuality ?><?= $qualityCount > 0 ? ' / 10' : '' ?></span></strong>
+                    </div>
+
+                    <div class="col-container" style="margin-bottom:10px;">
+                        <strong>Components brands: <span style="font-weight:normal;opacity:0.8;"><?= e($brandsList) ?></span></strong>
+                    </div>
+
                     <?php if (isAuthenticated()): ?>
                         <button <?= !isCustomer() ? 'disabled' : '' ?>
                                 class="a-btn <?= isCustomer() ? '' : 'disabled' ?>"
-                                onclick="handleOrder('<?= $id ?>', 1, false)">
+                                onclick="handleOrder('<?= $conf_id?>', 1, false)">
                             Add to Cart
                         </button>
                     <?php else: ?>

@@ -53,7 +53,6 @@ case 'login':
     case 'pc_list':
    default:
         require_once __DIR__ . '/models/pc_configuration.php';
-
         $currentPage = (int)($_GET['p'] ?? 1);
         $perPage = isAdminOrStaff() ? 29 : 30;
         $offset = max(0, ($currentPage - 1) * $perPage);
@@ -68,19 +67,15 @@ case 'login':
         $stmt->execute();
         
         $configurations = $stmt->fetchAll();
-
         if (!empty($configurations)) {
             $configIds = array_map(fn($item) => $item->id, $configurations);
-            
             $placeholders = implode(',', array_fill(0, count($configIds), '?'));
             
             $compStmt = $pdo->prepare("SELECT * FROM pc_components WHERE pc_configuration_id IN ($placeholders)");
             $compStmt->execute($configIds);
             $allComponents = $compStmt->fetchAll(PDO::FETCH_ASSOC);
-
             foreach ($allComponents as $component) {
                 $configId = $component['pc_configuration_id'];
-                
                 foreach ($configurations as $config) {
                     if ($config->id === $configId) {
                         $config->components[] = $component;

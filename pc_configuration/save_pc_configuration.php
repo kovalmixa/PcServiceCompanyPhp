@@ -13,17 +13,35 @@ $id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
 $name = isset($_POST['name']) ? trim((string)$_POST['name']) : null;
 $componentsRaw = $_POST['components'] ?? '';
 $components = json_decode($componentsRaw, true);
+
 if (empty($name) || !is_array($components)){
     echo json_encode(['success' => false, 'error' => 'Invalid data: Name or Components missing.']);
     exit;
 }
-$uploadDir = __DIR__ . '/../uploads/';
+
+$uploadDir = __DIR__ . '/../images/';
 $imagePath = null;
+
 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-    $imagePath = handleImageUpload($_FILES['image'], $uploadDir);
+    $currentImagePath = null;
+    
+    if ($id !== null) {
+        $stmt = $pdo->prepare("SELECT image_path FROM pc_configurations WHERE id = ?");
+        $stmt->execute([$id]);
+        $currentImagePath = $stmt->fetchColumn() ?: null;
+    }
+
+    $imagePath = handleImageUpload($_FILES['image'], $uploadDir, $currentImagePath);
+    
     if ($imagePath === null) {
         echo json_encode(['success' => false, 'error' => 'Failed to save uploaded image']);
         exit;
+    }
+} else {
+    if ($id !== null) {
+        $stmt = $pdo->prepare("SELECT image_path FROM pc_configurations WHERE id = ?");
+        $stmt->execute([$id]);
+        $imagePath = $stmt->fetchColumn() ?: null;
     }
 }
 
@@ -33,7 +51,7 @@ try {
         $configurationId = $id ?? (int)$pdo->lastInsertId();
         saveComponents($pdo, $configurationId, $components);
         $pdo->commit();
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'id' => $configurationId]);
     } else {
         $pdo->rollBack();
         echo json_encode(['success' => false, 'error' => 'Configuration with this name might already exist']);
@@ -44,16 +62,35 @@ try {
 }
 exit;
 
-function handleImageUpload(array $file, string $uploadDir): ?string {
+function handleImageUpload(array $file, string $uploadDir, ?string $currentImagePath = null): ?string {
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $allowed = ['jpg', 'jpeg', 'png', 'webp'];
     if (!in_array(strtolower($extension), $allowed)) return null;
 
+    if ($currentImagePath !== null) {
+        $absoluteOldPath = __DIR__ . '/../' . $currentImagePath; 
+        
+        if (file_exists($absoluteOldPath)) {
+            $oldHash = md5_file($absoluteOldPath);
+            $newHash = md5_file($file['tmp_name']);
+            if ($oldHash === $newHash) return $currentImagePath; 
+        }
+    }
+
     $fileName = uniqid('img_', true) . '.' . $extension;
     $destination = $uploadDir . $fileName;
 
-    if (move_uploaded_file($file['tmp_name'], $destination)) return '/uploads/' . $fileName;
+    if (move_uploaded_file($file['tmp_name'], $destination)) {
+        if ($currentImagePath !== null) {
+            $absoluteOldPath = __DIR__ . '/../' . $currentImagePath;
+            if (file_exists($absoluteOldPath)) {
+                unlink($absoluteOldPath); 
+            }
+        }
+        
+        return 'images/' . $fileName;
+    }
     return null;
 }
 
@@ -90,16 +127,17 @@ function saveComponents(\PDO $pdo, int $configurationId, array $components): voi
     $values = [];
 
     foreach ($components as $component) {
-        $rows[] = '(?, ?, ?, ?, ?, ?)';
+        $rows[] = '(?, ?, ?, ?, ?, ?, ?)';
         $values[] = $configurationId;
         $values[] = isset($component['name']) ? (string)$component['name'] : 'Unknown';
         $values[] = isset($component['quantity']) ? (int)$component['quantity'] : 1;
+        $values[] = isset($component['quality']) ? (int)$component['quality'] : 1;
         $values[] = isset($component['brand']) ? (string)$component['brand'] : null;
         $values[] = isset($component['type']) ? (string)$component['type'] : null;
         $values[] = isset($component['price']) ? (float)$component['price'] : 0.0;
     }
 
-    $sql = "INSERT INTO pc_components (pc_configuration_id, name, quantity, brand, type, price) VALUES " . implode(', ', $rows);
+    $sql = "INSERT INTO pc_components (pc_configuration_id, name, quantity, quality, brand, type, price) VALUES " . implode(', ', $rows);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($values);
 }

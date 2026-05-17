@@ -23,11 +23,9 @@ ob_start();
                 </div>
             </a>
         <?php endif; ?>
-
         <?php 
         foreach ($configurations as $configItem): 
             include __DIR__ . '/../shared/_pc_configuration_card.php'; 
-        
         endforeach; 
         ?>
 

@@ -12,9 +12,8 @@ class PcConfiguration {
 
     public function getPrice(): float {
         $total = 0.0;
-        foreach ($this->components as $component) {
-            $total += (float)($component['price'] ?? 0);
-        }
+        foreach ($this->components as $component)
+            $total += (float)($component['price'] ?? 0) * (int)($component['quantity'] ?? 1);
         return $total;
     }
 }

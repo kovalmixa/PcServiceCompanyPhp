@@ -10,7 +10,6 @@ $imagePath =         $config['image_path']  ?? '';
 $img       = imgSrc($imagePath ?: null);
 $components = $config['components'] ?? [];
 $pageTitle = $isEdit ? 'Edit PC Configuration' : 'New PC Configuration';
-
 ob_start();
 ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>css/grid.css">
@@ -244,9 +243,7 @@ async function submitConfiguration(id, isEdit) {
 
     const fd = new FormData();
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    if (csrfMeta) {
-        fd.append('csrf_token', csrfMeta.content);
-    }
+    if (csrfMeta) fd.append('csrf_token', csrfMeta.content);
     fd.append('id', id > 0 ? id : '');
     fd.append('name', name);
     fd.append('components', JSON.stringify(components));
@@ -259,8 +256,8 @@ async function submitConfiguration(id, isEdit) {
         try {
             const data = JSON.parse(responseText);
             if (data.success) {
-                alert(`Configuration "${name}" successfully saved!`);
-                window.location.href = 'index.php?page=pc_configuration';
+                const finalId = data.id || id;
+                window.location.href = `index.php?page=pc_configuration&id=${finalId}`;
             } else {
                 alert('Server error: ' + data.error);
             }

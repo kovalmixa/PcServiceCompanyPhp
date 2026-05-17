@@ -8,10 +8,17 @@ $pc_image   =             $config['image_path']  ?? null;
 $components =             $config['components']  ?? [];
 
 $total_price = 0;
+$quality_sum = 0;
+$quality_count = 0;
+
 foreach ($components as $component) {
     $total_price += (float)($component['price'] ?? 0) * (int)($component['quantity'] ?? 1);
+    if (isset($component['quality']) && $component['quality'] !== '') {
+        $quality_sum += (float)$component['quality'];
+        $quality_count++;
+    }
 }
-
+$mean_quality = $quality_count > 0 ? round($quality_sum / $quality_count, 1) : '—';
 ob_start();
 ?>
 <?= csrfField() ?>
@@ -47,7 +54,7 @@ ob_start();
         <div class="included-components-box" style="display:flex; flex-direction:column; gap:10px;">
             
             <div style="display:flex; justify-content:space-between; padding: 0 20px; margin-bottom: 5px;">
-                <?php foreach (['Name','Brand','Type','Price ($)','Quality (0–10)','Qty',''] as $h): ?>
+                <?php foreach (['Name','Brand','Type','Price ($)','Quality (0–10)','Qty','Total Price'] as $h): ?>
                     <span style="font-size:0.72rem; text-transform:uppercase; opacity:0.5; font-weight:600; flex: 1; text-align: left;"><?= $h ?></span>
                 <?php endforeach; ?>
             </div>
@@ -57,14 +64,13 @@ ob_start();
                     <?php foreach ($components as $componentData): ?>
                         <?php 
                         $isEdit = false; 
-                        include __DIR__ . '/../shared/_pc_configuration_card.php'; 
+                        include __DIR__ . '/../shared/_component_row.php'; 
                         ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p style="opacity:0.5; padding:40px; text-align:center;">No components listed.</p>
                 <?php endif; ?>
             </div>
-
         </div>
     </div>
 
@@ -87,18 +93,24 @@ ob_start();
                     <?= money($total_price) ?>
                 </h2>
             </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <label style="font-size:0.75rem;opacity:0.5;text-transform:uppercase;font-weight:bold;">Mean quality</label>
+                <h2 id="price-value" class="money"
+                    style="margin:0;font-size:2.2rem;font-weight:800;line-height:1;">
+                    <?= $mean_quality ?>
+                </h2>
+            </div>
         </div>
 
         <div style="display:flex;gap:20px;align-items:center;">
             <?php if (isCustomer()): ?>
                 <button class="a-btn" style="min-width:200px;padding:15px;"
-                        onclick="handleOrder('<?= $id ?>', getValue('quantity-input'), <?= $companyId ?? 0 ?>, false)">
+                        onclick="handleOrder('<?= $id ?>', getValue('quantity-input'), false)">
                     Add to Cart
                 </button>
             <?php else: ?>
-                <a href="<?= url('pc_configuration_edit', ['id' => $id]) ?>"
-                   class="a-btn"
-                   style="padding:15px 35px;background:#333;color:#fff;font-weight:bold;
+                <a href="index.php?page=pc_configuration_edit&id=<?= $id ?>"
+                   class="a-btn" style="padding:15px 35px;background:#333;color:#fff;font-weight:bold;
                           border-radius:10px;text-decoration:none;display:inline-block;">
                     Edit Config
                 </a>
@@ -119,6 +131,6 @@ $pageContent = ob_get_clean();
 ob_start();
 ?>
 <script type="module" src="<?= BASE_URL ?>js/price.js"></script>
-<script type="module" src="<?= BASE_URL ?>js/data-base.js"></script>
+<script type="module" src="<?= BASE_URL ?>js/server.js"></script>
 <?php
 $pageScripts = ob_get_clean();

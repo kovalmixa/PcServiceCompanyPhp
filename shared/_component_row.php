@@ -1,11 +1,10 @@
 <?php
 require_once __DIR__ . '/_helpers.php';
 
-$isEdit = $isEdit ?? false;
-
+if (!isset($componentData)) return;
 $itemCardData = is_object($componentData) ? json_decode(json_encode($componentData), true) : $componentData;
 
-$id           = (int)  ($itemCardData['id']           ?? 0);
+$comp_id      = (int)  ($itemCardData['id']           ?? 0);
 $name         =         $itemCardData['name']         ?? '';
 $brand        =         $itemCardData['brand']        ?? '';
 $type         =         $itemCardData['type']         ?? '';
@@ -20,13 +19,7 @@ $initialPrice = $price * $quantity;
     <div class="glass-container row-container" 
          style="display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:10px; padding:15px 20px;">
         
-        <span style="flex:2; font-weight:600; font-size:1rem; text-align:left;">
-            <?php if (!$isEdit): ?>
-                <a href="/component/<?= $id ?>" style="text-decoration:none; color:inherit;"><?= e($name) ?></a>
-            <?php else: ?>
-                <?= e($name) ?>
-            <?php endif; ?>
-        </span>
+        <span style="flex:1; opacity:0.85;"><?= e($name) ?></span>
 
         <span style="flex:1; opacity:0.85;"><?= e($brand) ?></span>
 
@@ -64,14 +57,6 @@ $initialPrice = $price * $quantity;
             <strong id="price-label-<?= $id ?>" class="money" style="font-size:1.1rem;">
                 <?= money($initialPrice) ?>
             </strong>
-
-            <?php if ($isEdit): ?>
-                <button type="button" class="red-btn" 
-                        style="font-size:1.5rem; line-height:1; width:30px; height:30px; display:flex; align-items:center; justify-content:center; padding:0; border-radius:5px;" 
-                        onclick="document.getElementById('row-<?= $id ?>').remove(); updateTotalPriceLabel()">
-                    &times;
-                </button>
-            <?php endif; ?>
         </div>
 
     </div>
