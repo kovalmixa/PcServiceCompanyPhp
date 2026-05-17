@@ -111,7 +111,9 @@ if (empty($components) && $price > 0) $brandsList = $brand;
                             card.style.transform = 'scale(0.9)';
                             setTimeout(() => card.remove(), 350);
                         }
-                    } else alert('Error deleting.');
+                    } else {
+                        alert('Error deleting.');
+                    }
                 })
                 .catch(err => console.error('Fetch error:', err));
             }

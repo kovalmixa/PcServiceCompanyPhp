@@ -103,6 +103,22 @@ ob_start();
         </div>
 
         <div style="display:flex;gap:20px;align-items:center;">
+            <div style="width:300%;">
+                <?php
+                include __DIR__ . '/../shared/_mail.php';
+                renderMailWidget([
+                    'subject' => 'PC Configuration: ' . $pc_name,
+                    'template' => 'pc_config',
+                    'data' => [
+                        'pc_name' => $pc_name,
+                        'components' => $components,
+                        'total_price' => $total_price,
+                        'mean_quality' => $mean_quality
+                    ]
+                ]);
+                ?>
+            </div>
+
             <?php if (isCustomer()): ?>
                 <button class="a-btn" style="min-width:200px;padding:15px;"
                         onclick="handleOrder('<?= $id ?>', getValue('quantity-input'), false)">
