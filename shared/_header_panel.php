@@ -50,16 +50,13 @@ $balance        = $balance ?? 0.00;
                     <a href="/admin/suppliers" class="a-btn">Suppliers</a>
                     <a href="/admin/panel" class="a-btn">Admin Panel</a>
                 <?php endif; ?>
-
                 <a href="/auth/logout" class="red-btn">Logout</a>
 
             <?php else: ?>
-
                 <a href="/pc-configurations?pageSize=30" class="a-btn">PC Configurations</a>
                 <a href="/components?pageSize=30" class="a-btn">Components</a>
                 <a href="/auth/login" class="a-btn">Login</a>
                 <a href="/auth/register" class="a-btn">Register</a>
-
             <?php endif; ?>
         </nav>
 

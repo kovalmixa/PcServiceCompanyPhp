@@ -2,13 +2,8 @@
 require_once __DIR__ . '/shared/_helpers.php';
 require_once __DIR__ . '/shared/_auth.php';
 require_once __DIR__ . '/shared/_data_base.php';
-require_once __DIR__ . '/shared/_pc_list_service.php';
+require_once __DIR__ . '/shared/_pc_conf_service.php';
 
-$action = $_GET['action'] ?? '';
-if ($action === 'save_pc_configuration') {
-    require_once __DIR__ . '/pc_configuration/save_pc_configuration.php'; 
-    exit;
-}
 $page = $_GET['page'] ?? 'home';
 $p = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -17,6 +12,22 @@ $pageContent = '';
 $pageScripts = '';
 
 $configService = new PcConfigurationService($pdo);
+$action = $_GET['action'] ?? '';
+$id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
+
+switch ($action) {
+    case 'save_pc_configuration' :
+        require_once __DIR__ . '/pc_configuration/save_pc_configuration.php'; 
+        exit;
+    case 'search_configurations' :
+        require_once __DIR__ . '/pc_configurations/search.php'; 
+        exit;
+    case 'removePcConfiguration' :
+        header('Content-Type: application/json');
+        $success = $configService->removePcConfiguration($id);
+        echo json_encode(['success' => $success]);
+        exit;
+}
 
 switch ($page) {
 case 'login':
@@ -51,22 +62,44 @@ case 'login':
         break;
     case 'home':
     case 'pc_list':
-   default:
+    default:
         require_once __DIR__ . '/models/pc_configuration.php';
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
         $currentPage = (int)($_GET['p'] ?? 1);
         $perPage = isAdminOrStaff() ? 29 : 30;
         $offset = max(0, ($currentPage - 1) * $perPage);
 
-        $totalItems = $pdo->query("SELECT COUNT(*) FROM pc_configurations")->fetchColumn();
-        $totalPages = max(1, (int)ceil($totalItems / $perPage));
+        $searchIds = $_SESSION['search_config_ids'] ?? null;
+        $searchQuery = $_SESSION['search_query_string'] ?? '';
 
-        $stmt = $pdo->prepare("SELECT * FROM pc_configurations ORDER BY id DESC LIMIT ? OFFSET ?");
-        $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, 'PcConfiguration');
-        $stmt->execute();
-        
-        $configurations = $stmt->fetchAll();
+        if ($searchIds !== null) {
+            $totalCount = (count($searchIds) === 1 && $searchIds[0] === -1) ? 0 : count($searchIds);
+            $totalPages = max(1, (int)ceil($totalCount / $perPage));
+
+            if ($totalCount > 0) {
+                $pageIds = array_slice($searchIds, $offset, $perPage);
+                $inQuery = implode(',', array_fill(0, count($pageIds), '?'));
+
+                $sql = "SELECT * FROM pc_configurations WHERE id IN ($inQuery) ORDER BY id DESC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->setFetchMode(PDO::FETCH_CLASS, 'PcConfiguration');
+                $stmt->execute($pageIds);
+                $configurations = $stmt->fetchAll();
+            } else $configurations = [];
+        } else {
+            $totalCount = $pdo->query("SELECT COUNT(*) FROM pc_configurations")->fetchColumn();
+            $totalPages = max(1, (int)ceil($totalCount / $perPage));
+
+            $sql = "SELECT * FROM pc_configurations ORDER BY id DESC LIMIT ? OFFSET ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+            $stmt->setFetchMode(PDO::FETCH_CLASS, 'PcConfiguration');
+            $stmt->execute();
+            $configurations = $stmt->fetchAll();
+        }
+
         if (!empty($configurations)) {
             $configIds = array_map(fn($item) => $item->id, $configurations);
             $placeholders = implode(',', array_fill(0, count($configIds), '?'));
@@ -74,6 +107,7 @@ case 'login':
             $compStmt = $pdo->prepare("SELECT * FROM pc_components WHERE pc_configuration_id IN ($placeholders)");
             $compStmt->execute($configIds);
             $allComponents = $compStmt->fetchAll(PDO::FETCH_ASSOC);
+
             foreach ($allComponents as $component) {
                 $configId = $component['pc_configuration_id'];
                 foreach ($configurations as $config) {

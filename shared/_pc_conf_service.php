@@ -76,4 +76,25 @@ class PcConfigurationService {
         }
         return $config;
     } 
+
+    public function removePcConfiguration(int $id): bool {
+        if ($id <= 0) return false;
+
+        try {
+            $this->pdo->beginTransaction();
+            $sqlComp = "DELETE FROM pc_components WHERE pc_configuration_id = ?";
+            $stmtComp = $this->pdo->prepare($sqlComp);
+            $stmtComp->execute([$id]);
+
+            $sqlCfg = "DELETE FROM pc_configurations WHERE id = ?";
+            $stmtCfg = $this->pdo->prepare($sqlCfg);
+            $stmtCfg->execute([$id]);
+
+            $this->pdo->commit();
+            return true;
+        } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollback();
+            return false;
+        }
+    }
 }
