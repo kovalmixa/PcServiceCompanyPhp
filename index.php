@@ -7,7 +7,8 @@ require_once __DIR__ . '/shared/_pc_conf_service.php';
 $page = $_GET['page'] ?? 'home';
 $p = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
+$errors = [];
+$old = [];
 $pageContent = '';
 $pageScripts = '';
 
@@ -30,9 +31,16 @@ switch ($action) {
 }
 
 switch ($page) {
-case 'login':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') login(); 
-        require_once __DIR__ . '/auth/login.php';
+    case 'login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $authResult = login();
+            if (!$authResult['success']) {
+                $errors = $authResult['errors'];
+                $old    = $authResult['old'];
+            }
+        }
+        ob_start();
+        require __DIR__ . '/auth/login.php';
         break;
 
     case 'register':

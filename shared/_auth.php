@@ -62,17 +62,18 @@ function register(): void {
     }
 }
 
-function login(?string $emailArg = null, ?string $passwordArg = null): void {
+function login(): array {
     $errors = [];
     $old    = [];
+
     try {
         if (isAuthenticated()) {
             header('Location: ' . BASE_URL . 'index.php');
             exit;
         }
 
-        $email    = trim($_POST['email']    ?? $emailArg    ?? '');
-        $password =      $_POST['password'] ?? $passwordArg ?? '';
+        $email    = trim($_POST['email']    ?? '');
+        $password =      $_POST['password'] ?? '';
         $old['email'] = $email;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') validateCsrf();
@@ -100,8 +101,11 @@ function login(?string $emailArg = null, ?string $passwordArg = null): void {
 
     } catch (Exception $e) {
         if (empty($errors['_general'])) $errors['_general'] = $e->getMessage();
-        require __DIR__ . '/../auth/login.php';
-        exit;
+        return [
+            'success' => false,
+            'errors'  => $errors,
+            'old'     => $old
+        ];
     }
 }
 
